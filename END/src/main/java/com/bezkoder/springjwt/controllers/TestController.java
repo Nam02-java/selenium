@@ -187,17 +187,6 @@
 //     * @return
 //     */
 //    /**
-//     * dem dong soi toa nho anh trang
-//     * than ta mot minh giua chon lao
-//     * than than trach phan de lam chi
-//     * khi phan nguoi von da lao dao
-//     * quan co quan thi cho ai tren
-//     * mac cho tieng keu thau muon troi
-//     * cach mang khong mau cach mang gi
-//     * chi co do mau moi thanh cong
-//     * mac cho long dan ko thanh mot
-//     * dang ta van cu ung dung di
-//     * di dau ve dau lam chuyen gi
 //     *
 //     * @param principal
 //     * @param authentication
