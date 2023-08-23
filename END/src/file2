@@ -1,0 +1,63 @@
+1. điểm giống nhau của hai cách này đều hướng tới Authorization (phân quyền) , ngay sau khi authentication user thành công -> sẽ tới bước
+authorization để user hoạt động sau đó với mỗi api tương ứng mà quyền hạn gắn trên nó cho phép
+
+2. điểm khác nhau và những trường hợp sử dụng :
+
+về cách vận hành của code :
+
+về cách 1 -> ngay sau khi đọc được api từ annotation @GetMapiping và xác nhận thành công user có ROLE tương ứng với giá trị bên trong
+annotation @PreAuthorize sẽ được đi sâu vào trong function đồng thời HttpServletRequest cũng được khởi tạo và check quyền tiếp
+với phương thức isUserInRole , check được tiếp thì đi tiếp
+
+về cách 2 -> sau khi đi qua các annotation thì trong annotation @PreAuthorize sẽ phải lấy thêm giá trị từ user thuộc bảng mysql thông
+qua authentication.principal thuộc common built-in expressions
+
+-> từ hai cách vận hành trên đã thấy được nguyên lý hoạt động của hai cách sẽ hoàn toàn khác nhau
+
++ về cách 1 nguyên lý hoạt động dựa trên tier security model -> nghĩa là có trên hai lớp an ninh bảo mật , lý do mà nó hoạt động dựa trên
+điều đó bởi trong mỗi method thực thi theo nguyên lý này đều có trên 2 lần check quyền của object -> đi sâu vào hoạt động của nguyên lý
+này thì sẽ thấy thêm HttpServletRequest sử dụng isUserInRole sau khi vượt qua lớp bảo mật đầu tiên là annotation @PreAuthorize , lý do
+sử dụng HttpServletRequest.isUserInRole có tác dụng bám sát nguyên lý hoạt động dựa trên tier securty model và thêm nữa trong spring
+security không thể sử dụng 2 annotation @PreAuthorize để đáp ứng tier seuciry model -> nên sẽ sử dụng HttpServletRequest sau đó sẽ đáp
+ứng được điều kiện của nguyên lý và sẽ đi qua 2 phần bảo mật trong method đó
+
++ về cách 2 nguyên lý hoạt động dựa trên chủ yếu từ các giá trị được get về trong annotation @PreAuthorize khi hoạt động chính của nguyên
+lý này cái chính là get giá trị của object , tại sao lại là chính ? bởi vì trong annotation @PreAuthorize có expression 'hasRole' và
+đây là thứ phải có khi muốn authorization và vì đang áp dụng nguyên lý này nên expression authentication.principal ngẫu nhiên sẽ là hoạt
+động chính của nguyên lý này -> tác dụng chính của expression authentication.principal là get về giá trị thuộc object trong database
+để làm điều kiện đối chiếu với giá trị đã config trong annotation @PreAuthorize , nếu khớp với giá trị đã config thì sẽ thông qua và
+đi tiếp -> lý do sử dụng expression authentication.principal vì nó thuộc Common Built-In Expressions của spring security nên áp dụng
+triệt để luôn , các cách như gắn authentication thuộc securityContextHolder hoặc pricipal trong method sẽ khiến đoạn code cầu kì
+và phức tạp hơn nên mới sinh ra common built-in expressions để tối ưu hóa chương trình
+
+-> tùy theo mỗi case mà sẽ áp dụng nguyên lý của cách 1 hoặc nguyên lý của cách 2 : trong những trường hợp phía user cần truy cập api
+với điều kiện chính là phải đảm bảo có 2 ROLE trở lên ví dụ như cần có ROLE " USER " và " CUSTOMER " thì lúc này nguyên lý hoạt động
+của cách 1 sẽ đóng vai trò tốt nhất để áp dụng , lý do mà nguyên lý của cách 1  hợp là vì trường hợp ví dụ trên đã thuộc dạng tier
+security model , cần nhiều phần phân quyền để xét duyệt mà nguyên lý cách 1 ngoài annotation @PreAuthorize lại có thêm HttpServlet
+để check các ROLE của object sau đó nên hoàn toàn đáp ứng được case như trên -> và trong những case như trên mà vẫn áp dụng nguyên lý
+hoạt động của cách 2 thì sẽ không hoạt động được vì sau câu lệnh authentication.pricipal sẽ lấy giá trị từ column của bảng lưu object
+trong  database mà role của object sẽ ko lưu trong bảng đó nên sẽ bị lỗi khi áp dụng nguyên lý .
+
+và trong những trường hợp phía user cần truy cập api với điều kiện chính ngoài việc có ROLE mặc định như 'USER' thì cần xét thêm các
+thông số như tuổi , id ,... mới được truy cập thì sẽ vận dụng cách 2 bởi nguyên lý hoạt động cách 2 dựa trên việc get các giá trị của
+object về và xét cùng trong annotation @PreAuthorize -> lấy đối số đã config ở expression authentication.pricipal và so sánh với giá
+trị đã config -> nguyên lý cách 2 hoàn toàn khớp với case như thế này , thêm nữa trong trường hợp vẫn cố sử dụng nguyên lý hoạt động của
+cách 1 thì sẽ gặp lỗi tức thì vì vốn dĩ phương thức isUserInRole của HttpServletRequest sinh ra để get ROLE cho chủ thể mà lại nhét giá
+trị cần so sánh là các giá trị khác của object mà ko phải role sẽ lỗi chương trình khi đoạn code chạy tới dòng đó .
+
+
+  @GetMapping("/test1")
+    @PreAuthorize("hasRole('USER') && authentication.principal.function_name == 'function'")
+    public ResponseEntity<?> accessApi(@RequestHeader Map<String, String> headers) throws IOException {
+        return ResponseEntity.ok(new MessageResponse("Public api function successfully !"));
+    }
+
+    @GetMapping("/test2")
+    @PreAuthorize(("hasRole('USER')"))
+    public String String(HttpServletRequest request) {
+        if (request.isUserInRole("MODERATOR")) {
+            return "200 ok";
+        }
+
+        return "Public Content.";
+    }

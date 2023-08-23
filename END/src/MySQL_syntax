@@ -1,0 +1,76 @@
+1.lúc thì a vào được b không :
+
+2.lúc thì a a config ngược lại :
+
+UPDATE users
+    SET function_name = CASE WHEN function_name = 'function' THEN null
+                             WHEN function_name = null THEN 'function'
+                             END;
+
+
+3.lúc thì a config cả 2 đều vào được
+UPDATE users SET function_name = 'function';
+
+
+SELECT
+   (@cnt := @cnt + 1) AS rowNumber, ID
+  from table1
+  CROSS JOIN (SELECT @cnt := 0) AS n
+where
+  (
+    (1 = 1
+    )
+  )
+  and date > '2020-08-06 08:51:23.08'
+  HAVING rowNumber > 4
+  ORDER BY ID
+  LIMIT 10
+;
+
+/////////////////////////////////////////////////
+
+  UPDATE students s
+   JOIN (
+       SELECT 1 as id, 5 as new_score1, 8 as new_score2
+       UNION ALL
+       SELECT 2, 10, 8
+       UNION ALL
+       SELECT 3, 8, 3
+       UNION ALL
+       SELECT 4, 10, 7
+   ) vals ON s.id = vals.id
+   SET score1 = new_score1, score2 = new_score2;
+
+///////////////////////////////////////////////////
+web
+
+ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ADD INDEX (id);
+
+/////////////////////////////////////////////
+
+ALTER TABLE users ADD id INT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ADD INDEX (function_name);
+
+
+ALTER TABLE users AUTO_INCREMENT = 7;
+
+
+UPDATE employees
+SET
+    email = 'mary.patterson@classicmodelcars.com'
+WHERE
+    employeeNumber = 1056;
+Code language: SQL (Structured Query Language) (sql)
+
+
+ALTER TABLE Students AUTO_INCREMENT = 100;
+
+
+/////////////////////////////////////////////////
+
+
+ALTER TABLE users AUTO_INCREMENT = 11;
+UPDATE users set function_name = 'function';
+
+

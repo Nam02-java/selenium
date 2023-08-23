@@ -1,0 +1,141 @@
+Cách 1 :
+
+    @GetMapping("/test1")
+    @PreAuthorize("hasRole('USER') && authentication.principal.function_name == 'function'")
+    public ResponseEntity<?> accessApi(@RequestHeader Map<String, String> headers) throws IOException {
+        return ResponseEntity.ok(new MessageResponse("Public api function successfully !"));
+    }
+
+Cách 2 :
+
+    @GetMapping("/test2")
+    @PreAuthorize(("hasRole('USER')"))
+    public String String(HttpServletRequest request) {
+        if (request.isUserInRole("MODERATOR")) {
+            return "200 ok";
+        }
+
+        return "Public Content.";
+    }
+
+Trình Bày :
+
+I. điểm giống nhau
+
+- điểm tương đồng của hai cách trên đều hướng tới bước authorization (phân quyền) sau khi đã được authentication (xác thực) thành công
+
+II. điểm khác nhau
+
+1) Nguyên Lý && Bản Chất && Trường Hợp Sử Dụng
+
+* Cách 1 :
+
+- Nguyên lý của cách 1 dựa trên việc đối chiếu giá trị của USER được lấy về bởi authentication.pricipal trong bảng CSDL MYSQL với giá trị
+được config ở annotation @PreAuthorize để so sánh và phân quyền là ROLE của USER
+
+    @PreAuthorize("hasRole('USER') && authentication.principal.function_name == 'function'")
+    nghĩa là phương thức authentication.principal.function_name sẽ lấy giá trị của USER trong CSDL MYSQL để so sánh với giá trị
+    được config trong annotation trên là 'function'
+
+    + @PreAUthorize là annotation thuộc spring security sử dụng ở đây dựa trên khả năng kiểm soát biểu thức bên trong nó nhờ
+    vào spring expression language và thuộc Expression-Based Access Control
+
+
+- Lý do cách này ra đời là do cách này áp dụng cho trường hợp dụng sau khi USER đăng nhập và được xác thực thành công, sau đó USER truy
+cập vào API cần phải chứng minh có giá trị điều kiện ví dụ như link cờ bạc phải trên 18 tuổi mới được truy cập, link game chỉ cho phép
+IP việt nam truy cập , ... thì ví dụ lúc này sẽ thành
+
+    @PreAuthorize("hasRole('USER') && authentication.principal.age >= 18")
+    ví dụ áp dụng cho trường hợp USER truy cập đường link cờ bạc phải trên 18 tuổi mới được truy cập
+
+- Khi giá trị của USER được lấy bởi authentication.principal thì bản chất của phương thức này chính là đi vào bảng USER đã được config
+kết nối với class USER ( gồm có các thông số , constructor ) để lấy giá trị đã lưu trong bảng USER ở CSDL MYSQL
+
+- Một USER sẽ có nhiều thông số đi kèm như tên , tuổi , id , ... thì authentication.principal._____ sẽ lấy tên cột bảng tương ứng với giá
+trị cần lấy trong bảng USER của CSDL MYSQL , ví dụ muốn lấy tên của USER và bảng tên trong CSDL MYSQL tên là nameColumn thì sẽ thành
+authentication.principal.nameColumn -> bản chất chỉ cần thay tên cột bảng là sẽ lấy giá trị của bảng đó
+
+* Cách 2 :
+- Nguyên lý của cách 2 dựa trên bảo mật phân lớp , nghĩa là sau khi đi qua lớp phân quyền đầu tiên là annotation
+     @PreAuthorize(("hasRole('USER')"))
+
+     thì sẽ đi tiếp xuống lớp phân quyền thứ hai là
+
+     if (request.isUserInRole("MODERATOR")) {
+
+     được lấy từ HttpServletRequest request với mục đích get ROLE của USER có tương thích với tên ROLE đã config trong phương thức ko
+
+- Lý do cách này ra đời để áp dụng cho những trường hợp đường link API yêu cầu 2 quyền trở lên chẳng hạn như đường link đổi mật khẩu wifi
+, ngoài quyền USER vốn có thì sẽ cần thêm quyền MODERATOR của chủ wifi thì ví dụ sẽ thành :
+
+     @GetMapping("/wifi")
+         @PreAuthorize(("hasRole('USER')"))
+         public String String(HttpServletRequest request) {
+             if (request.isUserInRole("MODERATOR")) {
+                 // logic code
+             }
+             return "";
+         }
+
+     sau khi check quyền USER xong ở dòng đầu tiên sẽ đi tiếp xuống dưới để check quyền MODERATOR, không đáp ứng sẽ bị văng ra ngoài
+
+- bản chất của phương thức isUserInRole thuộc HttpServletRequest là hàm Boolean và bên trong chứa String , khi request chứa ROLE không
+tương ứng với giá trị đã được config trong phương thức isUserInRole sẽ trả về FALSE và trả lỗi + văng ra ngoài , ngược lại nếu giá trị
+khớp thì sẽ trả về TRUE và đi tiếp
+
+
+Tổng kết :
+
+* So Sánh :
+- điểm giống nhau :
++ cả hai cách đều chung mục đích là phân quyền vì luôn có @PreAuthorize(("hasRole('USER')"))
+
+- điểm khác nhau :
++ vì cách 1 sau khi phân quyền sẽ get giá trị của USER để so sánh tiếp nên sẽ phù hợp những bài toán khi phía API đặt nặng vấn đề về
+điều kiện truy cập ( link cờ bạc > 18 tuổi , link game phải là IP việt nam , ... )
++ còn cách 2 sau khi phân quyền sẽ lại phân quyền tiếp nhờ phương thức isUserInRole của HttpServletRequest phù hợp những bài toán khi
+phía API đặt nặng vấn đề về cần hai quyền đổ lên của USER Khi truy cập ( link truy cập để đổi mật khẩu WIFI - cần quyền USER là 1 , sau
+đó là quyền MODERATOR là 2 )
+-> chính về thế đã tạo nên sự khác biệt , khác cả về cách làm sau đó cũng như trường hợp áp dụng , như cách 2 không thể áp dụng cho
+trường hợp link API yêu cầu > 18 tuổi, và cách 1 cũng ko áp  dụng được cho trường hợp truy cập link đổi mật khẩu WIFI cần 2 quyền đổ đi
+
+
+sửa lại
+
+cách 2 phù hợp khi yêu cầu phía API cần thêm phân quyền 1 lượt nữa sau khi đã thỏa mãn điều kiện ở trên , nghĩa là sau khi phân quyền
+bởi @PreAuthorize(hasRole) và thỏa mãn điều kiện bên dưới , chương trình cần thêm một lượt phân quyền nữa nhằm mục đích giải quyết điều
+kiện tiếp theo thì lúc này phương thức isUserInRole của HttpServletRequest sẽ giải quyết được điều này
+
+ví dụ như : khi game bắn súng có chiến dịch truy cập link API ("/GET-GIFT-EXP") và đăng ký 1 số thứ sẽ được tặng 200 kinh nghiệm vào nick
+đồng thời nếu là binh nhì ( người mới tham gia trò chơi ) sẽ được tặng súng vĩnh viễn , ngược lại nếu không phải là binh nhì
+mà là những người chơi đã lâu , 1 thời gian nên cấp cao hơn thì sẽ chỉ được tặng súng dùng thứ 7 ngày -> điều nay thu hút thêm nhiều ng
+chơi mới
+
+                    @GetMapping("/GET-GIFT-EXP")
+                       @PreAuthorize(("hasRole('PLAYER')"))
+                       public String String(HttpServletRequest request) {
+
+                           int exp_user = 0;
+                           exp_user += 200;
+
+                           if (exp_user >= 800) {
+                               if (request.isUserInRole("Binh Nhi")) {
+                                   return "Tang sung vinh vien cho tan binh";
+                               } else {
+
+                               }
+                           }
+                           return "";
+                       }
+
+                    lúc này ngay sau khi truy cập thành công , toàn bộ người chơi sẽ auto được nhận 200 exp
+                    sau khi thỏa mãn điều kiện đầu tiên là checkRole('PLAYER')
+                    chương trình muốn tặng súng phân theo cấp bậc người chơi nên đã áp dụng cách 2 là sử dụng
+                    phương thức isUserInRole của HttpServletRequest để dùng là if (request.isUserInRole("Binh Nhi"))
+
+                    nếu áp dụng cách 1 cho trường hợp như thế này thì không làm được bởi nếu
+                    @PreAuthorize("hasRole('PLAYER') && authentication.principal.function_name == 'Binh Nhi'")
+                    thì chương trình sẽ chỉ duyệt được người chơi có cấp bậc binh nhì mà thôi , những ngươi chơi  cấp khác sẽ không
+                    vào được để nhận quà dù cũng chung ROLE ('PLAYER')
+
+

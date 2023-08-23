@@ -1,0 +1,55 @@
+lý thuyết :
+
+  " lấy giá trị cho biết của user đang được đăng nhập xem đó có khớp với role đang được chỉ định trong phương thức hay ko "
+
+bản chất :
+
+- bản chất của phương thức isUserInRole(String) là xác định xem SecurityContextHolder.getContext().getAuthentication().getAuthorities()
+chứa  GrantedAuthority cùng với ROLE được truyền vào isUserInRole(String) có khớp nhau ko ? khớp thì về true , ko thì về false
+
+isUserInRole em thấy em sử dụng nó đúng , vì như lý thuyết ở ảnh là " lấy giá trị cho biết của user đang được đăng nhập xem đó có
+khớp với role đang được chỉ định trong phương thức hay ko "
+
+" lấy giá trị cho biết của user đang được đăng nhập xem đó có khớp với role đang được chỉ định trong phương thức hay ko " - bản chất
+của phương thức isUserInRole(String) là xác định xem SecurityContextHolder.getContext().getAuthentication().getAuthorities() chứa
+GrantedAuthority cùng với ROLE được truyền vào isUserInRole(String) có khớp nhau ko ? khớp thì về true , ko thì về false
+
+cách làm :
+
+       @GetMapping("/GET-GIFT-EXP")
+         @PreAuthorize(("hasRole('DEFAULT_PLAYER')"))
+         public String String(HttpServletRequest request) {
+
+             int exp_user = 0;
+             exp_user += 200;
+
+             if (exp_user >= 800) {
+                 if (request.isUserInRole("Binh Nhi")) {
+                     return "Tang sung vinh vien cho tan binh";
+                 }
+             }
+             return "Tang sung dung thu 7 ngay cho cac chien huu";
+
+         }
++
+so sánh với bản chất :
+
+_ điểm giống nhau :
++ sau khi ủy quyền thành công sẽ được đi sâu vào method và code hoạt động sau đó y hệt như bản chất đã trình bày ở trên
+
+- điểm khác nhau :
++ thay vì phương thức nằm riêng biệt như chỉ có HttpServletRequest.isUserInRole("ROLE") thì lúc này nó lại nằm bên trong câu
+điều kiện IF -> điều này dẫn tới cách làm đã có phần khác đi so với bản chất
+
+
+Tổng kết :
+- điểm khác biệt chính thay vì isUserInRole nằm riêng biệt thì nó lại nằm trong điều kiện IF
+- trong trường hợp isUserInRole không nằm trong điều kiện IF mà muốn đặt điều kiện thì có thể GET giá trị TRUE hoặc FALSE của
+phương thức để làm điều kiện check sau đó
+
+
+
+
+
+
+
