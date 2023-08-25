@@ -55,12 +55,12 @@ public class WebController {
 
         driver.findElement(By.xpath("//*[@id=\"input_text\"]")).clear();
 
-        waitForElementToSendKeys(100, "//*[@id=\"input_text\"]", text);
+        waitForElementToSendKeys(10, "//*[@id=\"input_text\"]", text);
 
         if (driver.findElement(By.xpath("//*[@id=\"select2-select_lang_bin-container\"]")).getText().equals(xpath_vietnameseToText)) {
         } else {
             driver.findElement(By.xpath("//*[@id=\"select2-select_lang_bin-container\"]")).click();
-            waitForElementToSendKeys(100, "/html/body/span/span/span[1]/input", Vietnamese);
+            waitForElementToSendKeys(10, "/html/body/span/span/span[1]/input", Vietnamese);
             driver.findElement(By.xpath("/html/body/span/span/span[1]/input")).sendKeys(Keys.ENTER);
         }
 
