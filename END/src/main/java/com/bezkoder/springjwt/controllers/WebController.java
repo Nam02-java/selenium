@@ -14,6 +14,7 @@ import java.io.File;
 import java.time.Duration;
 import java.util.Map;
 
+
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @RequestMapping("/api/web")
@@ -44,7 +45,7 @@ public class WebController {
         options.setExperimentalOption("debuggerAddress", "localhost:9222");
 
         driver = new ChromeDriver(options);
-        
+
         Thread.sleep(1000);
 
         driver.manage().window().maximize();
@@ -139,6 +140,3 @@ public class WebController {
 
 }
 
-
-//C:\Program Files\Google\Chrome\Application
-//chrome.exe --remote-debugging-port=9222 --user-data-dir="C:\Users\Public\Videos\Dowload\ChromeDriverWork\chromedriver-win64\chromedata"
