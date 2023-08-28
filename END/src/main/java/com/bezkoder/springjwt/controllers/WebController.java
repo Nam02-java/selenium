@@ -32,7 +32,7 @@ public class WebController {
 
     private static String xpath_vietnameseToText = "138. Vietnamese (Vietnam) - VN";
 
-    @GetMapping("/ttsfree")
+      @GetMapping("/ttsfree")
     public void ttsfreeAPI(@RequestParam Map<String, String> params) throws InterruptedException, IOException {
         String text = params.get("Text");
         String voice = params.get("Voice");
@@ -71,9 +71,17 @@ public class WebController {
             waitForElementToClick(10, female_voice);
         }
 
+
+        /**
+         * đoạn code này có tác dụng :
+         * đảm bảo mọi thao tác trên đều đã được chọn trước khi convert , có 1 số trường hợp vì tốc độ internet nhanh mà máy tính chạy chậm theo ko kịp nên convert luôn
+         * mặc dù các tùy chỉnh còn chưa xong ở trên web -> không đúng yêu cầu khi voice được tải về máy tính
+         */
+        Thread.sleep(2000);
+
         driver.findElement(By.xpath("//*[@id=\"frm_tts\"]/div[2]/div[2]/div[1]/a")).click();
 
-        Thread.sleep(2500);
+        Thread.sleep(2000);
 
         js.executeScript("arguments[0].scrollIntoView();", Element); // thi thoảng web sẽ tự kéo xuống sau khi convert giọng nói nên dòng này sẽ có nhiệm vụ lăn chuột về nơi nút dowload hiển thị
 
