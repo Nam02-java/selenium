@@ -32,14 +32,14 @@ public class WebController {
 
     private static String xpath_vietnameseToText = "138. Vietnamese (Vietnam) - VN";
 
-       @GetMapping("/ttsfree")
+    @GetMapping("/ttsfree")
     public void ttsfreeAPI(@RequestParam Map<String, String> params) throws InterruptedException, IOException {
         String text = params.get("Text");
         String voice = params.get("Voice");
         fileName = params.get("FileName");
 
         System.setProperty("webdriver.http.factory", "jdk-http-client");
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Pc\\Downloads\\chromedriver-win64\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Public\\Videos\\Dowload\\ChromeDriverWork\\chromedriver-win64\\chromedriver.exe");
 
         ChromeOptions options = new ChromeOptions();
         options.setExperimentalOption("debuggerAddress", "localhost:9222");
@@ -71,25 +71,16 @@ public class WebController {
             waitForElementToClick(10, female_voice);
         }
 
-
-        /**
-         * đoạn code này có tác dụng :
-         * đảm bảo mọi thao tác trên đều đã được chọn trước khi convert , có 1 số trường hợp vì tốc độ internet nhanh mà máy tính chạy chậm theo ko kịp nên convert luôn
-         * mặc dù các tùy chỉnh còn chưa xong ở trên web -> không đúng yêu cầu khi voice được tải về máy tính
-         */
-        Thread.sleep(2000);
-
         driver.findElement(By.xpath("//*[@id=\"frm_tts\"]/div[2]/div[2]/div[1]/a")).click();
-
-        Thread.sleep(2000);
-
-        js.executeScript("arguments[0].scrollIntoView();", Element); // thi thoảng web sẽ tự kéo xuống sau khi convert giọng nói nên dòng này sẽ có nhiệm vụ lăn chuột về nơi nút dowload hiển thị
 
         waitForElementUnstable(5, 60, "//*[@id=\"progessResults\"]/div[2]/center[1]/div/a");
 
-        Thread.sleep(2000);
-        getLastModified("C:\\Users\\Pc\\Downloads\\");
-        Files.move(Paths.get(String.valueOf(chosenFile)), Paths.get("C:\\Voice\\" + fileName + ".mp3"), StandardCopyOption.REPLACE_EXISTING);
+        getLastModified("C:\\Users\\Admin-DL\\Downloads\\");
+        Files.move(Paths.get(String.valueOf(chosenFile)), Paths.get("C:\\Users\\Public\\Videos\\TestDowload\\" + fileName + ".mp3"), StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    public void waitForElementDownload_Button(int seconds, String waitConditionLocator_Before) {
+        WebDriverWait webDriverWait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
     }
 
 
@@ -98,21 +89,21 @@ public class WebController {
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(waitConditionLocator))).sendKeys(text);
     }
 
-    public void waitForElementUnstable(int timeOut, int pollingEvery, String xpath) {
+    public void waitForElementUnstable(int timeOut, int pollingEvery, String xpath) throws InterruptedException {
+        Thread.sleep(2500);
         Wait<WebDriver> wait = new FluentWait<WebDriver>(driver).withTimeout(Duration.ofSeconds(timeOut)).pollingEvery(Duration.ofSeconds(pollingEvery)).ignoring(NoSuchElementException.class, StaleElementReferenceException.class);
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(xpath))).click();
-        System.out.println("work here");
-
-
     }
-
 
     public void waitForElementToClick(int seconds, String waitConditionLocator) {
+        check = false;
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(seconds));
         wait.until(ExpectedConditions.elementToBeClickable(By.xpath(waitConditionLocator))).click();
+        check = true;
     }
 
-    public static File getLastModified(String directoryFilePath) {
+    public static File getLastModified(String directoryFilePath) throws InterruptedException {
+        Thread.sleep(2000);
         File directory = new File(directoryFilePath);
         File[] files = directory.listFiles(File::isFile);
         long lastModifiedTime = Long.MIN_VALUE;
@@ -131,7 +122,7 @@ public class WebController {
     }
 
     public static void convert_file_name(String fileName) {
-        String file_path = "C:\\Users\\Pc\\Downloads\\";
+        String file_path = "C:\\Users\\Admin-DL\\Downloads\\";
         File rename = new File(file_path + fileName + ".mp3");
 
         boolean flag = chosenFile.renameTo(rename);
