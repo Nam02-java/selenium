@@ -32,14 +32,31 @@ public class WebController {
 
     private static String xpath_vietnameseToText = "138. Vietnamese (Vietnam) - VN";
 
-    @GetMapping("/ttsfree")
-    public void ttsfreeAPI(@RequestParam Map<String, String> params) throws InterruptedException, IOException {
+     @GetMapping("/ttsfree")
+    public ResponseEntity<?> ttsfreeAPI(@RequestParam Map<String, String> params) throws InterruptedException, IOException {
         String text = params.get("Text");
         String voice = params.get("Voice");
         fileName = params.get("FileName");
 
+        File directory = new File("C:\\Voice\\");
+        File[] files = directory.listFiles(File::isFile);
+
+        for (int i = 0; i < files.length; i++) {
+            String name = files[i].getName();
+            String target=name.copyValueOf(".mp3".toCharArray());
+            name=name.replace(target, "");
+            if (name.equals(fileName)) {
+                return ResponseEntity.ok(new String("The file name is duplicate , please change the name"));
+            }
+        }
+
+
         System.setProperty("webdriver.http.factory", "jdk-http-client");
-        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Public\\Videos\\Dowload\\ChromeDriverWork\\chromedriver-win64\\chromedriver.exe");
+        System.setProperty("webdriver.chrome.driver", "C:\\Users\\Pc\\Downloads\\chromedriver-win64\\chromedriver.exe");
+
+        HashMap<String, Object> chromePrefs = new HashMap<String, Object>();
+        chromePrefs.put("profile.default_content_settings.popups", 0);
+        chromePrefs.put("download.default_directory", "C:\\Voice\\");
 
         ChromeOptions options = new ChromeOptions();
         options.setExperimentalOption("debuggerAddress", "localhost:9222");
@@ -56,7 +73,7 @@ public class WebController {
 
         driver.findElement(By.xpath("//*[@id=\"input_text\"]")).clear();
 
-        waitForElementToSendKeys(10, "//*[@id=\"input_text\"]", text);
+        driver.findElement(By.xpath("//*[@id=\"input_text\"]")).sendKeys(text);
 
         if (driver.findElement(By.xpath("//*[@id=\"select2-select_lang_bin-container\"]")).getText().equals(xpath_vietnameseToText)) {
         } else {
@@ -73,10 +90,14 @@ public class WebController {
 
         driver.findElement(By.xpath("//*[@id=\"frm_tts\"]/div[2]/div[2]/div[1]/a")).click();
 
-        waitForElementUnstable(5, 60, "//*[@id=\"progessResults\"]/div[2]/center[1]/div/a");
+        js.executeScript("arguments[0].scrollIntoView();", Element); // thi thoảng web sẽ tự kéo xuống sau khi convert giọng nói nên dòng này sẽ có nhiệm vụ lăn chuột về nơi nút dowload hiển thị
 
-        getLastModified("C:\\Users\\Admin-DL\\Downloads\\");
-        Files.move(Paths.get(String.valueOf(chosenFile)), Paths.get("C:\\Users\\Public\\Videos\\TestDowload\\" + fileName + ".mp3"), StandardCopyOption.REPLACE_EXISTING);
+        waitForElementUnstable(5, 30, "//*[@id=\"progessResults\"]/div[2]/center[1]/div/a");
+
+        getLastModified("C:\\Users\\Pc\\Downloads\\");
+        Files.move(Paths.get(String.valueOf(chosenFile)), Paths.get("C:\\Voice\\" + fileName + ".mp3"), StandardCopyOption.REPLACE_EXISTING);
+
+        return ResponseEntity.ok(new String("Successfully"));
     }
 
     public void waitForElementDownload_Button(int seconds, String waitConditionLocator_Before) {
